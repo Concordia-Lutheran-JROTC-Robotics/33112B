@@ -70,8 +70,10 @@ void autonomous() {
 	} else if (autonRightSide) {
 		pros::lcd::set_text(1, "Right Side Autonomous");
 		// Right side code here
-	} else if (autonLeftSide && autonRightSide) {
+	} else if (!autonLeftSide && !autonRightSide) {
 		pros::lcd::set_text(1, "Autonomous Disabled")
+	} else {
+		pros::lcd::set_text(1, "Variables Mismatched")
 	}
 }
 
