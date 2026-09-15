@@ -1,6 +1,6 @@
 #include "main.h"
 
-static bool autonLeftSide = false;
+static bool autonLeftSide = true;
 static bool autonRightSide = false;
 
 void on_left_button() {
@@ -24,7 +24,7 @@ void on_right_button() {
 void initialize() {
 	pros::lcd::initialize();
 	pros::lcd::set_text(1, "Initialization Process");
-	pros::lcd::set_text(2, "Autonomous: Disabled")
+	pros::lcd::set_text(2, "Autonomous: Left Side");
 
 	pros::lcd::register_btn0_cb(on_left_button);
 	pros::lcd::register_btn2_cb(on_right_button);
@@ -71,9 +71,9 @@ void autonomous() {
 		pros::lcd::set_text(1, "Right Side Autonomous");
 		// Right side code here
 	} else if (!autonLeftSide && !autonRightSide) {
-		pros::lcd::set_text(1, "Autonomous Disabled")
+		pros::lcd::set_text(1, "Autonomous Disabled");
 	} else {
-		pros::lcd::set_text(1, "Variables Mismatched")
+		pros::lcd::set_text(1, "Variables Mismatched");
 	}
 }
 
