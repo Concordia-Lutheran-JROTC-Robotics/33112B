@@ -1,4 +1,7 @@
 #include "main.h"
+#include "pros/adi.hpp"
+#include "pros/misc.h"
+#define DIGITAL_SENSOR_PORT 'A'
 
 static bool autonLeftSide = true;
 static bool autonRightSide = false;
@@ -21,6 +24,7 @@ void on_right_button() {
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
+
 void initialize() {
 	pros::lcd::initialize();
 	pros::lcd::set_text(1, "Initialization Process");
@@ -28,8 +32,6 @@ void initialize() {
 
 	pros::lcd::register_btn0_cb(on_left_button);
 	pros::lcd::register_btn2_cb(on_right_button);
-
-	pros::ADIDigitalOut clawPiston('A');
 }
 
 /**
@@ -92,12 +94,15 @@ void autonomous() {
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
+
+bool clawPistonValue = false;
+pros::adi::DigitalOut clawPiston(DIGITAL_SENSOR_PORT);
+
 void opcontrol() {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	pros::lcd::set_text(1, "Driver Control");
 	pros::MotorGroup left_mg({1, 7, 10});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
 	pros::MotorGroup right_mg({-11, -17, -20});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
-
 
 	while (true) {
 		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
@@ -109,6 +114,17 @@ void opcontrol() {
 		int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
 		left_mg.move(dir - turn);                      // Sets left motor voltage
 		right_mg.move(dir + turn);                     // Sets right motor voltage
-		pros::delay(20);                               // Run for 20 ms then update
+		
+		if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) {
+			if (clawPistonValue) {
+				clawPistonValue = false;
+				clawPiston.set_value(false);
+			} else if (!clawPistonValue) {
+				clawPistonValue = true;
+				clawPiston.set_value(true);
+			}
+		}
 	}
+	
+	pros::delay(20);                               // Run for 20 ms then update
 }
