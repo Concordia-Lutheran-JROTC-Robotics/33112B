@@ -116,13 +116,8 @@ void opcontrol() {
 		right_mg.move(dir + turn);                     // Sets right motor voltage
 		
 		if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) {
-			if (clawPistonValue) {
-				clawPistonValue = false;
-				clawPiston.set_value(false);
-			} else if (!clawPistonValue) {
-				clawPistonValue = true;
-				clawPiston.set_value(true);
-			}
+			clawPiston.set_value(clawPistonValue);
+			clawPistonValue = !clawPistonValue;
 		}
 	}
 	
