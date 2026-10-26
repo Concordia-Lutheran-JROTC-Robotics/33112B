@@ -1,4 +1,5 @@
 #include "main.h"
+#include "liblvgl/llemu.hpp"
 #include "pros/adi.hpp"
 #include "pros/misc.h"
 #define DIGITAL_SENSOR_PORT 'A'
@@ -115,10 +116,11 @@ void opcontrol() {
 		left_mg.move(dir - turn);                      // Sets left motor voltage
 		right_mg.move(dir + turn);                     // Sets right motor voltage
 		
-		if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) {
-			clawPiston.set_value(clawPistonValue);
-			clawPistonValue = !clawPistonValue;
-		}
+		// if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) {
+		// 	// clawPiston.set_value(clawPistonValue);
+		// 	// clawPistonValue = !clawPistonValue;
+		// 	pros::lcd::set_text(1, "A Button Works");
+		// }
 	}
 	
 	pros::delay(20);                               // Run for 20 ms then update
