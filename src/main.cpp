@@ -3,7 +3,8 @@
 #include "pros/adi.hpp"
 #include "pros/misc.h"
 #include "pros/screen.hpp"
-#define DIGITAL_SENSOR_PORT 'A'
+
+#define DIGITAL_PISTON_PORT 'A'
 
 static bool autonLeftSide = true;
 static bool autonRightSide = false;
@@ -98,15 +99,14 @@ void autonomous() {
  */
 
 bool clawPistonValue = false;
-pros::adi::DigitalOut clawPiston(DIGITAL_SENSOR_PORT);
+pros::adi::DigitalOut clawPiston(DIGITAL_PISTON_PORT);
 
 void opcontrol() {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	pros::lcd::set_text(1, "Driver Control");
 	pros::MotorGroup left_mg({1, 7, 10});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
 	pros::MotorGroup right_mg({-11, -17, -20});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
-
-	static bool pistonPressValue = false;
+	pros::MotorGroup lift_mg({15, -3});
 
 	while (true) {
 		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
@@ -119,11 +119,31 @@ void opcontrol() {
 		left_mg.move(dir - turn);                      // Sets left motor voltage
 		right_mg.move(dir + turn);                     // Sets right motor voltage
 		
-		if (master.get_digital(DIGITAL_A) && !pistonPressValue) {
+		if (master.get_digital_new_press(DIGITAL_A)) {
 			clawPiston.set_value(clawPistonValue);
 			clawPistonValue = !clawPistonValue;
 		}
-		pistonPressValue = master.get_digital(DIGITAL_A);
+
+		bool turnRightClaw = true;
+		if (master.get_digital_new_press(DIGITAL_B)) {
+			return;
+		}
+
+		if (master.get_digital_new_press(DIGITAL_L1)) {
+			while (master.get_digital(DIGITAL_L1)) {
+				lift_mg.move(75);
+				pros::delay(20);
+			}
+			lift_mg.move(0);
+		}
+
+		if (master.get_digital_new_press(DIGITAL_L2)) {
+			while (master.get_digital(DIGITAL_L2)) {
+				lift_mg.move(-75);
+				pros::delay(20);
+			}
+			lift_mg.move(0);
+		}
 
 		pros::delay(20);
 	}
