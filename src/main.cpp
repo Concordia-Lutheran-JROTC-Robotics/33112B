@@ -13,6 +13,13 @@
 static bool autonLeftSide = true;
 static bool autonRightSide = false;
 
+pros::MotorGroup left_mg({1, 7, 10});
+pros::MotorGroup right_mg({-11, -17, -20});
+pros::MotorGroup lift_mg({-15, 3});
+pros::Motor clawRotate(5, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
+pros::Motor clawArm(21, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
+pros::adi::DigitalOut clawPiston(DIGITAL_PISTON_PORT);
+
 void on_left_button() {
 	pros::lcd::set_text(2, "Autonomous: Left Side");
 	autonLeftSide = true;
@@ -103,17 +110,11 @@ void autonomous() {
  */
 
 bool clawPistonValue = false;
-pros::adi::DigitalOut clawPiston(DIGITAL_PISTON_PORT);
 
 void opcontrol() {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	pros::lcd::set_text(1, "Driver Control");
-	pros::MotorGroup left_mg({1, 7, 10});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
-	pros::MotorGroup right_mg({-11, -17, -20});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
-	pros::MotorGroup lift_mg({-15, 3});
-	pros::Motor clawRotate(5, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
 	clawRotate.set_reversed(true);
-	pros::Motor clawArm(21, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
 	
 	// Record initial position so lift never goes back further than start
 	double liftInitialPosition = lift_mg.get_position();
