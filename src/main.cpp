@@ -1,8 +1,12 @@
 #include "main.h"
 #include "liblvgl/llemu.hpp"
+#include "pros/abstract_motor.hpp"
 #include "pros/adi.hpp"
 #include "pros/misc.h"
+#include "pros/motors.h"
+#include "pros/motors.hpp"
 #include "pros/screen.hpp"
+#include <string>
 
 #define DIGITAL_PISTON_PORT 'A'
 
@@ -106,7 +110,16 @@ void opcontrol() {
 	pros::lcd::set_text(1, "Driver Control");
 	pros::MotorGroup left_mg({1, 7, 10});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
 	pros::MotorGroup right_mg({-11, -17, -20});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
-	pros::MotorGroup lift_mg({15, -3});
+	pros::MotorGroup lift_mg({-15, 3});
+	pros::Motor clawRotate(5, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
+	clawRotate.set_reversed(true);
+	pros::Motor clawArm(21, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
+	
+	// Record initial position so lift never goes back further than start
+	double liftInitialPosition = lift_mg.get_position();
+	lift_mg.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
+	bool turnRightClaw = true;
+	clawArm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
 	while (true) {
 		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
@@ -124,9 +137,14 @@ void opcontrol() {
 			clawPistonValue = !clawPistonValue;
 		}
 
-		bool turnRightClaw = true;
 		if (master.get_digital_new_press(DIGITAL_B)) {
-			return;
+			if (turnRightClaw) {
+				clawRotate.move_absolute(100, 75);
+				turnRightClaw = false;
+			} else if (!turnRightClaw) {
+				clawRotate.move_absolute(0, 75);
+				turnRightClaw = true;
+			}
 		}
 
 		if (master.get_digital_new_press(DIGITAL_L1)) {
@@ -139,10 +157,28 @@ void opcontrol() {
 
 		if (master.get_digital_new_press(DIGITAL_L2)) {
 			while (master.get_digital(DIGITAL_L2)) {
+				if (lift_mg.get_position() <= liftInitialPosition) {
+					lift_mg.move(0);
+					break;
+				}
 				lift_mg.move(-75);
 				pros::delay(20);
 			}
 			lift_mg.move(0);
+		}
+
+		if (master.get_digital_new_press(DIGITAL_R1)) {
+			while (master.get_digital(DIGITAL_R1)) {
+				clawArm.move(50);
+			}
+			clawArm.move(0);
+		}
+
+		if (master.get_digital_new_press(DIGITAL_R2)) {
+			while (master.get_digital(DIGITAL_R2)) {
+				clawArm.move(-50);
+			}
+			clawArm.move(0);
 		}
 
 		pros::delay(20);
