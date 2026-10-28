@@ -18,6 +18,7 @@ pros::MotorGroup right_mg({-11, -17, -20});
 pros::MotorGroup lift_mg({-15, 3});
 pros::Motor clawRotate(5, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
 pros::Motor clawArm(21, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
+pros::Motor clawUD(13, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
 pros::adi::DigitalOut clawPiston(DIGITAL_PISTON_PORT);
 
 void on_left_button() {
@@ -46,6 +47,11 @@ void initialize() {
 
 	pros::lcd::register_btn0_cb(on_left_button);
 	pros::lcd::register_btn2_cb(on_right_button);
+
+	clawArm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	clawUD.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+
+	
 }
 
 /**
@@ -82,6 +88,8 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
+	clawArm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	clawUD.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	if (autonLeftSide) {
 		pros::lcd::set_text(1, "Left Side Autonomous");
 		// Left side code here
@@ -120,7 +128,9 @@ void opcontrol() {
 	double liftInitialPosition = lift_mg.get_position();
 	lift_mg.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
 	bool turnRightClaw = true;
+
 	clawArm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	clawUD.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
 	while (true) {
 		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
@@ -128,8 +138,8 @@ void opcontrol() {
 		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);  // Prints status of the emulated screen LCDs
 
 		// Arcade control scheme
-		int dir = -master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
-		int turn = -master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
+		int dir = master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
+		int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
 		left_mg.move(dir - turn);                      // Sets left motor voltage
 		right_mg.move(dir + turn);                     // Sets right motor voltage
 		
@@ -170,16 +180,30 @@ void opcontrol() {
 
 		if (master.get_digital_new_press(DIGITAL_R1)) {
 			while (master.get_digital(DIGITAL_R1)) {
-				clawArm.move(50);
+				clawArm.move(75);
 			}
 			clawArm.move(0);
 		}
 
 		if (master.get_digital_new_press(DIGITAL_R2)) {
 			while (master.get_digital(DIGITAL_R2)) {
-				clawArm.move(-50);
+				clawArm.move(-75);
 			}
 			clawArm.move(0);
+		}
+
+		if (master.get_digital_new_press(DIGITAL_DOWN)) {
+			while (master.get_digital(DIGITAL_DOWN)) {
+				clawUD.move(-50);
+			}
+			clawUD.move(0);
+		}
+
+		if (master.get_digital_new_press(DIGITAL_RIGHT)) {
+			while (master.get_digital(DIGITAL_RIGHT)) {
+				clawUD.move(50);
+			}
+			clawUD.move(0);
 		}
 
 		pros::delay(20);
