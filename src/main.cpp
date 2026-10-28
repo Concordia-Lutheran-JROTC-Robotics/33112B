@@ -5,6 +5,7 @@
 #include "pros/misc.h"
 #include "pros/motors.h"
 #include "pros/motors.hpp"
+#include "pros/rtos.hpp"
 #include "pros/screen.hpp"
 #include <string>
 
@@ -118,16 +119,76 @@ void autonomous() {
  */
 
 bool clawPistonValue = false;
+bool turnRightClaw = true;
+double liftInitialPosition = lift_mg.get_position();
+
+pros::Controller master(pros::E_CONTROLLER_MASTER);
+
+void digital_b_function() {
+	if (turnRightClaw) {
+		clawRotate.move_absolute(100, 75);
+		turnRightClaw = false;
+	} else if (!turnRightClaw) {
+		clawRotate.move_absolute(0, 75);
+		turnRightClaw = true;
+	}
+}
+
+void digital_l1_function() {
+	while (master.get_digital(DIGITAL_L1)) {
+		lift_mg.move(75);
+		pros::delay(20);
+	}
+	lift_mg.move(0);
+}
+
+void digital_l2_function() {
+	while (master.get_digital(DIGITAL_L2)) {
+		if (lift_mg.get_position() <= liftInitialPosition) {
+			lift_mg.move(0);
+			break;
+		}
+		lift_mg.move(-75);
+		pros::delay(20);
+	}
+	lift_mg.move(0);
+}
+
+void digital_r1_function() {
+	while (master.get_digital(DIGITAL_R1)) {
+		clawArm.move(75);
+	}
+	clawArm.move(0);
+}
+
+void digital_r2_function() {
+	while (master.get_digital(DIGITAL_R2)) {
+		clawArm.move(-75);
+	}
+	clawArm.move(0);
+}
+
+void digital_down_function() {
+	while (master.get_digital(DIGITAL_DOWN)) {
+		clawUD.move(-35);
+	}
+	clawUD.move(0);
+}
+
+void digital_right_function() {
+	while (master.get_digital(DIGITAL_RIGHT)) {
+		clawUD.move(35);
+	}
+	clawUD.move(0);
+}
 
 void opcontrol() {
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
+	
 	pros::lcd::set_text(1, "Driver Control");
 	clawRotate.set_reversed(true);
 	
 	// Record initial position so lift never goes back further than start
-	double liftInitialPosition = lift_mg.get_position();
 	lift_mg.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
-	bool turnRightClaw = true;
 
 	clawArm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	clawUD.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -149,61 +210,68 @@ void opcontrol() {
 		}
 
 		if (master.get_digital_new_press(DIGITAL_B)) {
-			if (turnRightClaw) {
-				clawRotate.move_absolute(100, 75);
-				turnRightClaw = false;
-			} else if (!turnRightClaw) {
-				clawRotate.move_absolute(0, 75);
-				turnRightClaw = true;
-			}
+			// if (turnRightClaw) {
+			// 	clawRotate.move_absolute(100, 75);
+			// 	turnRightClaw = false;
+			// } else if (!turnRightClaw) {
+			// 	clawRotate.move_absolute(0, 75);
+			// 	turnRightClaw = true;
+			// }
+			pros::Task digital_b_task(digital_b_function);
 		}
 
 		if (master.get_digital_new_press(DIGITAL_L1)) {
-			while (master.get_digital(DIGITAL_L1)) {
-				lift_mg.move(75);
-				pros::delay(20);
-			}
-			lift_mg.move(0);
+			// while (master.get_digital(DIGITAL_L1)) {
+			// 	lift_mg.move(75);
+			// 	pros::delay(20);
+			// }
+			// lift_mg.move(0);
+			pros::Task digital_l1_task(digital_l1_function);
 		}
 
 		if (master.get_digital_new_press(DIGITAL_L2)) {
-			while (master.get_digital(DIGITAL_L2)) {
-				if (lift_mg.get_position() <= liftInitialPosition) {
-					lift_mg.move(0);
-					break;
-				}
-				lift_mg.move(-75);
-				pros::delay(20);
-			}
-			lift_mg.move(0);
+			// while (master.get_digital(DIGITAL_L2)) {
+			// 	if (lift_mg.get_position() <= liftInitialPosition) {
+			// 		lift_mg.move(0);
+			// 		break;
+			// 	}
+			// 	lift_mg.move(-75);
+			// 	pros::delay(20);
+			// }
+			// lift_mg.move(0);
+			pros::Task digital_l2_task(digital_l2_function);
 		}
 
 		if (master.get_digital_new_press(DIGITAL_R1)) {
-			while (master.get_digital(DIGITAL_R1)) {
-				clawArm.move(75);
-			}
-			clawArm.move(0);
+			// while (master.get_digital(DIGITAL_R1)) {
+			// 	clawArm.move(75);
+			// }
+			// clawArm.move(0);
+			pros::Task digital_r1_task(digital_r1_function);
 		}
 
 		if (master.get_digital_new_press(DIGITAL_R2)) {
-			while (master.get_digital(DIGITAL_R2)) {
-				clawArm.move(-75);
-			}
-			clawArm.move(0);
+			// while (master.get_digital(DIGITAL_R2)) {
+			// 	clawArm.move(-75);
+			// }
+			// clawArm.move(0);
+			pros::Task digital_r2_task(digital_r2_function);
 		}
 
 		if (master.get_digital_new_press(DIGITAL_DOWN)) {
-			while (master.get_digital(DIGITAL_DOWN)) {
-				clawUD.move(-50);
-			}
-			clawUD.move(0);
+			// while (master.get_digital(DIGITAL_DOWN)) {
+			// 	clawUD.move(-50);
+			// }
+			// clawUD.move(0);
+			pros::Task digital_down_task(digital_down_function);
 		}
 
 		if (master.get_digital_new_press(DIGITAL_RIGHT)) {
-			while (master.get_digital(DIGITAL_RIGHT)) {
-				clawUD.move(50);
-			}
-			clawUD.move(0);
+			// while (master.get_digital(DIGITAL_RIGHT)) {
+			// 	clawUD.move(50);
+			// }
+			// clawUD.move(0);
+			pros::Task digital_right_task(digital_right_function);
 		}
 
 		pros::delay(20);
