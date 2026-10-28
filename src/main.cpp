@@ -157,6 +157,7 @@ void digital_l2_function() {
 void digital_r1_function() {
 	while (master.get_digital(DIGITAL_R1)) {
 		clawArm.move(75);
+		pros::delay(20);
 	}
 	clawArm.move(0);
 }
@@ -164,6 +165,7 @@ void digital_r1_function() {
 void digital_r2_function() {
 	while (master.get_digital(DIGITAL_R2)) {
 		clawArm.move(-75);
+		pros::delay(20);
 	}
 	clawArm.move(0);
 }
@@ -171,6 +173,7 @@ void digital_r2_function() {
 void digital_down_function() {
 	while (master.get_digital(DIGITAL_DOWN)) {
 		clawUD.move(-35);
+		pros::delay(20);
 	}
 	clawUD.move(0);
 }
@@ -178,6 +181,7 @@ void digital_down_function() {
 void digital_right_function() {
 	while (master.get_digital(DIGITAL_RIGHT)) {
 		clawUD.move(35);
+		pros::delay(20);
 	}
 	clawUD.move(0);
 }
