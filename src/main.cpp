@@ -143,7 +143,7 @@ void opcontrol() {
 		left_mg.move(dir - turn);                      // Sets left motor voltage
 		right_mg.move(dir + turn);                     // Sets right motor voltage
 		
-		if (master.get_digital_new_press(DIGITAL_A)) {
+		if (master.get_digital_new_press(DIGITAL_Y)) {
 			clawPiston.set_value(clawPistonValue);
 			clawPistonValue = !clawPistonValue;
 		}
