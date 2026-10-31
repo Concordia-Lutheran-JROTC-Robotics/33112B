@@ -1,5 +1,6 @@
 #include "main.h"
 #include "liblvgl/llemu.hpp"
+#include "lemlib/api.hpp"
 #include "pros/abstract_motor.hpp"
 #include "pros/adi.hpp"
 #include "pros/misc.h"
@@ -21,6 +22,58 @@ pros::Motor clawRotate(5, pros::v5::MotorGears::green, pros::v5::MotorUnits::deg
 pros::Motor clawArm(21, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
 pros::Motor clawUD(13, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
 pros::adi::DigitalOut clawPiston(DIGITAL_PISTON_PORT);
+
+class Drivetrain {
+    pros::MotorGroup left{1, 7, 10};
+    pros::MotorGroup right{-11, -17, -20};
+    pros::Imu imu{2};  // IMU on port 10
+
+    static constexpr int MAX = 200;       // 18:1; 100 for 36:1, 600 for 6:1
+    static constexpr double TICKS_PER_INCH = 60.0;  // ← CALIBRATE THIS
+
+public:
+    // ── Drive a distance in inches (negative = backward) ──
+    void drive(double inches, int speed = MAX) {
+        int ticks = inches * TICKS_PER_INCH;
+        left.move_relative(ticks, speed);
+        right.move_relative(ticks, speed);
+        // Wait until both sides are near target
+        while (std::abs(left.get_position() - ticks) > 10 ||
+               std::abs(right.get_position() - ticks) > 10)
+            pros::delay(10);
+        stop();
+    }
+
+    // ── Turn by degrees (positive = right, negative = left) ──
+    void turn(double degrees, int speed = 150) {
+        double start = imu.get_rotation();  // unbounded, doesn't wrap
+        double target = start + degrees;
+
+        left.move_velocity(-speed);
+        right.move_velocity(speed);
+
+        while (std::abs(imu.get_rotation() - target) > 1.0)
+            pros::delay(10);
+
+        stop();
+    }
+
+    // ── Stop ──
+    void stop() {
+        left.move_velocity(0);
+        right.move_velocity(0);
+    }
+
+    // ── Reset sensors at start of auton ──
+    void tare() {
+        left.tare_position();
+        right.tare_position();
+        imu.tare_rotation();
+    }
+};
+
+Drivetrain drive;
+
 
 void on_left_button() {
 	pros::lcd::set_text(2, "Autonomous: Left Side");
@@ -91,8 +144,10 @@ void competition_initialize() {
 void autonomous() {
 	clawArm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	clawUD.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	autonLeftSide = true;
 	if (autonLeftSide) {
 		pros::lcd::set_text(1, "Left Side Autonomous");
+		drive.drive(12);
 		// Left side code here
 	} else if (autonRightSide) {
 		pros::lcd::set_text(1, "Right Side Autonomous");
