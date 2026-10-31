@@ -1,6 +1,5 @@
 #include "main.h"
 #include "liblvgl/llemu.hpp"
-#include "lemlib/api.hpp"
 #include "pros/abstract_motor.hpp"
 #include "pros/adi.hpp"
 #include "pros/misc.h"
@@ -28,13 +27,16 @@ class Drivetrain {
     pros::MotorGroup right{-11, -17, -20};
     pros::Imu imu{2};  // IMU on port 10
 
-    static constexpr int MAX = 200;       // 18:1; 100 for 36:1, 600 for 6:1
-    static constexpr double TICKS_PER_INCH = 60.0;  // ← CALIBRATE THIS
+    static constexpr int MAX = 100;       // 18:1; 100 for 36:1, 600 for 6:1
+    static constexpr double TICKS_PER_INCH = 40.1;  // ← CALIBRATE THIS
+
+    int driveSpeed = 60;
 
 public:
     // ── Drive a distance in inches (negative = backward) ──
-    void drive(double inches, int speed = MAX) {
-        int ticks = inches * TICKS_PER_INCH;
+    void drive(double inches, int speed = -1) {
+        if (speed < 0) speed = driveSpeed;
+        int ticks = -inches * TICKS_PER_INCH;
         left.move_relative(ticks, speed);
         right.move_relative(ticks, speed);
         // Wait until both sides are near target
@@ -57,6 +59,9 @@ public:
 
         stop();
     }
+
+    // ── Set drive speed ──
+    void setDriveSpeed(int speed) { driveSpeed = speed; }
 
     // ── Stop ──
     void stop() {
@@ -148,6 +153,10 @@ void autonomous() {
 	if (autonLeftSide) {
 		pros::lcd::set_text(1, "Left Side Autonomous");
 		drive.drive(12);
+		drive.setDriveSpeed(200);
+		drive.drive(-48);
+		drive.drive(12);
+		drive.setDriveSpeed(60);
 		// Left side code here
 	} else if (autonRightSide) {
 		pros::lcd::set_text(1, "Right Side Autonomous");
