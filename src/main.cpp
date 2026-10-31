@@ -78,6 +78,8 @@ public:
     }
 };
 
+Drivetrain drive;
+
 void on_left_button() {
 	pros::lcd::set_text(2, "Autonomous: Left Side");
 	autonLeftSide = true;

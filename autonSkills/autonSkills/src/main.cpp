@@ -78,6 +78,7 @@ public:
     }
 };
 
+Drivetrain drive;
 
 void on_left_button() {
 	pros::lcd::set_text(2, "Autonomous: Left Side");
@@ -165,6 +166,8 @@ void autonomous() {
 		pros::delay(2000);
 		left_mg.move(0);
 		right_mg.move(0);
+		pros::delay(1000);
+		drive.drive(72);
 		// Left side code here
 	} else if (autonRightSide) {
 		pros::lcd::set_text(1, "Right Side Autonomous");
