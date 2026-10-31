@@ -27,22 +27,23 @@ class Drivetrain {
     pros::MotorGroup right{-11, -17, -20};
     pros::Imu imu{2};  // IMU on port 10
 
-    static constexpr int MAX = 100;       // 18:1; 100 for 36:1, 600 for 6:1
     static constexpr double TICKS_PER_INCH = 40.1;  // ← CALIBRATE THIS
-
-    int driveSpeed = 60;
 
 public:
     // ── Drive a distance in inches (negative = backward) ──
-    void drive(double inches, int speed = -1) {
-        if (speed < 0) speed = driveSpeed;
+    void drive(double inches, int speed = 60) {
         int ticks = -inches * TICKS_PER_INCH;
+        left.tare_position();
+        right.tare_position();
         left.move_relative(ticks, speed);
         right.move_relative(ticks, speed);
         // Wait until both sides are near target
-        while (std::abs(left.get_position() - ticks) > 10 ||
-               std::abs(right.get_position() - ticks) > 10)
+        int timeout = 0;
+        while ((std::abs(left.get_position() - ticks) > 10 ||
+                std::abs(right.get_position() - ticks) > 10) && timeout < 1500) { // 15 seconds max
             pros::delay(10);
+            timeout++;
+        }
         stop();
     }
 
@@ -54,14 +55,14 @@ public:
         left.move_velocity(-speed);
         right.move_velocity(speed);
 
-        while (std::abs(imu.get_rotation() - target) > 1.0)
+        int timeout = 0;
+        while (std::abs(imu.get_rotation() - target) > 1.0 && timeout < 1000) {
             pros::delay(10);
+            timeout++;
+        }
 
         stop();
     }
-
-    // ── Set drive speed ──
-    void setDriveSpeed(int speed) { driveSpeed = speed; }
 
     // ── Stop ──
     void stop() {
@@ -76,9 +77,6 @@ public:
         imu.tare_rotation();
     }
 };
-
-Drivetrain drive;
-
 
 void on_left_button() {
 	pros::lcd::set_text(2, "Autonomous: Left Side");
@@ -152,11 +150,20 @@ void autonomous() {
 	autonLeftSide = true;
 	if (autonLeftSide) {
 		pros::lcd::set_text(1, "Left Side Autonomous");
-		drive.drive(12);
-		drive.setDriveSpeed(200);
-		drive.drive(-48);
-		drive.drive(12);
-		drive.setDriveSpeed(60);
+		drive.drive(12, 60);
+		pros::delay(1000);
+		left_mg.move(127);
+		right_mg.move(127);
+		pros::delay(2000);
+		left_mg.move(0);
+		right_mg.move(0);
+		drive.drive(12, 60);
+		pros::delay(500);
+		left_mg.move(127);
+		right_mg.move(127);
+		pros::delay(2000);
+		left_mg.move(0);
+		right_mg.move(0);
 		// Left side code here
 	} else if (autonRightSide) {
 		pros::lcd::set_text(1, "Right Side Autonomous");
