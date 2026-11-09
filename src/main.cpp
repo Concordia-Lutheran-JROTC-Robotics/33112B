@@ -14,12 +14,13 @@
 static bool autonLeftSide = true;
 static bool autonRightSide = false;
 
-pros::MotorGroup left_mg({1, 7, 10});
-pros::MotorGroup right_mg({-11, -17, -20});
-pros::MotorGroup lift_mg({-15, 3});
+pros::MotorGroup left_mg({18, 14, 11});
+pros::MotorGroup right_mg({-10, -8, -4});
+pros::MotorGroup lift_mg({16, -6});
 pros::Motor clawRotate(5, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
 pros::Motor clawArm(21, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
 pros::Motor clawUD(13, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
+pros::MotorGroup intake_mg({-2, 12});
 pros::adi::DigitalOut clawPiston(DIGITAL_PISTON_PORT);
 
 class Drivetrain {
@@ -245,18 +246,18 @@ void digital_r2_function() {
 
 void digital_down_function() {
 	while (master.get_digital(DIGITAL_DOWN)) {
-		clawUD.move(-35);
+		intake_mg.move(-100);
 		pros::delay(20);
 	}
-	clawUD.move(0);
+	intake_mg.move(0);
 }
 
 void digital_right_function() {
 	while (master.get_digital(DIGITAL_RIGHT)) {
-		clawUD.move(35);
+		intake_mg.move(100);
 		pros::delay(20);
 	}
-	clawUD.move(0);
+	intake_mg.move(0);
 }
 
 void opcontrol() {
