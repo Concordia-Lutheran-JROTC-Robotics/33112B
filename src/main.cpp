@@ -262,6 +262,7 @@ void opcontrol() {
 			// }
 			// lift_mg.move(0);
 			pros::Task digital_l2_task(digital_l2_function);
+		}
 
 		if (master.get_digital_new_press(DIGITAL_DOWN)) {
 			// while (master.get_digital(DIGITAL_DOWN)) {
