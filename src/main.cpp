@@ -14,19 +14,15 @@
 static bool autonLeftSide = true;
 static bool autonRightSide = false;
 
-pros::MotorGroup left_mg({18, 14, 11});
-pros::MotorGroup right_mg({-10, -8, -4});
+pros::MotorGroup left_mg({13, 14, 18});
+pros::MotorGroup right_mg({-4, -8, -10});
 pros::MotorGroup lift_mg({16, -6});
-pros::Motor clawRotate(5, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
-pros::Motor clawArm(21, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
-pros::Motor clawUD(13, pros::v5::MotorGears::green, pros::v5::MotorUnits::degrees);
 pros::MotorGroup intake_mg({-2, 12});
-pros::adi::DigitalOut clawPiston(DIGITAL_PISTON_PORT);
 
 class Drivetrain {
     pros::MotorGroup left{1, 7, 10};
     pros::MotorGroup right{-11, -17, -20};
-    pros::Imu imu{2};  // IMU on port 10
+    pros::Imu imu{21};
 
     static constexpr double TICKS_PER_INCH = 40.1;  // ← CALIBRATE THIS
 
@@ -107,10 +103,6 @@ void initialize() {
 
 	pros::lcd::register_btn0_cb(on_left_button);
 	pros::lcd::register_btn2_cb(on_right_button);
-
-	clawArm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	clawUD.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-
 	
 }
 
@@ -148,8 +140,6 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
-	clawArm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	clawUD.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	autonLeftSide = true;
 	if (autonLeftSide) {
 		pros::lcd::set_text(1, "Left Side Autonomous");
@@ -198,16 +188,6 @@ double liftInitialPosition = lift_mg.get_position();
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-void digital_b_function() {
-	if (turnRightClaw) {
-		clawRotate.move_absolute(100, 75);
-		turnRightClaw = false;
-	} else if (!turnRightClaw) {
-		clawRotate.move_absolute(0, 75);
-		turnRightClaw = true;
-	}
-}
-
 void digital_l1_function() {
 	while (master.get_digital(DIGITAL_L1)) {
 		lift_mg.move(75);
@@ -226,22 +206,6 @@ void digital_l2_function() {
 		pros::delay(20);
 	}
 	lift_mg.move(0);
-}
-
-void digital_r1_function() {
-	while (master.get_digital(DIGITAL_R1)) {
-		clawArm.move(75);
-		pros::delay(20);
-	}
-	clawArm.move(0);
-}
-
-void digital_r2_function() {
-	while (master.get_digital(DIGITAL_R2)) {
-		clawArm.move(-75);
-		pros::delay(20);
-	}
-	clawArm.move(0);
 }
 
 void digital_down_function() {
@@ -263,13 +227,9 @@ void digital_right_function() {
 void opcontrol() {
 	
 	pros::lcd::set_text(1, "Driver Control");
-	clawRotate.set_reversed(true);
 	
 	// Record initial position so lift never goes back further than start
 	lift_mg.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
-
-	clawArm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	clawUD.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
 	while (true) {
 		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
@@ -281,22 +241,6 @@ void opcontrol() {
 		int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
 		left_mg.move(dir - turn);                      // Sets left motor voltage
 		right_mg.move(dir + turn);                     // Sets right motor voltage
-		
-		if (master.get_digital_new_press(DIGITAL_Y)) {
-			clawPiston.set_value(clawPistonValue);
-			clawPistonValue = !clawPistonValue;
-		}
-
-		if (master.get_digital_new_press(DIGITAL_B)) {
-			// if (turnRightClaw) {
-			// 	clawRotate.move_absolute(100, 75);
-			// 	turnRightClaw = false;
-			// } else if (!turnRightClaw) {
-			// 	clawRotate.move_absolute(0, 75);
-			// 	turnRightClaw = true;
-			// }
-			pros::Task digital_b_task(digital_b_function);
-		}
 
 		if (master.get_digital_new_press(DIGITAL_L1)) {
 			// while (master.get_digital(DIGITAL_L1)) {
@@ -318,23 +262,6 @@ void opcontrol() {
 			// }
 			// lift_mg.move(0);
 			pros::Task digital_l2_task(digital_l2_function);
-		}
-
-		if (master.get_digital_new_press(DIGITAL_R1)) {
-			// while (master.get_digital(DIGITAL_R1)) {
-			// 	clawArm.move(75);
-			// }
-			// clawArm.move(0);
-			pros::Task digital_r1_task(digital_r1_function);
-		}
-
-		if (master.get_digital_new_press(DIGITAL_R2)) {
-			// while (master.get_digital(DIGITAL_R2)) {
-			// 	clawArm.move(-75);
-			// }
-			// clawArm.move(0);
-			pros::Task digital_r2_task(digital_r2_function);
-		}
 
 		if (master.get_digital_new_press(DIGITAL_DOWN)) {
 			// while (master.get_digital(DIGITAL_DOWN)) {
