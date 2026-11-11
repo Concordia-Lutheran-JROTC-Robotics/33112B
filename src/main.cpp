@@ -14,7 +14,7 @@
 static bool autonLeftSide = true;
 static bool autonRightSide = false;
 
-pros::MotorGroup left_mg({13, 14, 18});
+pros::MotorGroup left_mg({17, 14, 18});
 pros::MotorGroup right_mg({-4, -8, -10});
 pros::MotorGroup lift_mg({16, -6});
 pros::MotorGroup intake_mg({-2, 12});
