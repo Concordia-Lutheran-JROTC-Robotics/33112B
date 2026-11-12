@@ -147,37 +147,24 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
-	clawArm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	clawUD.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	autonLeftSide = true;
-	if (autonLeftSide) {
-		pros::lcd::set_text(1, "Left Side Autonomous");
-		drive.drive(12, 60);
-		pros::delay(1000);
-		left_mg.move(127);
-		right_mg.move(127);
-		pros::delay(2000);
-		left_mg.move(0);
-		right_mg.move(0);
-		drive.drive(12, 60);
-		pros::delay(500);
-		left_mg.move(127);
-		right_mg.move(127);
-		pros::delay(2000);
-		left_mg.move(0);
-		right_mg.move(0);
-		pros::delay(1000);
-		drive.drive(72);
-		// Left side code here
-	} else if (autonRightSide) {
-		pros::lcd::set_text(1, "Right Side Autonomous");
-		// Right side code here
-	} else if (!autonLeftSide && !autonRightSide) {
-		pros::lcd::set_text(1, "Autonomous Disabled");
-	} else {
-		pros::lcd::set_text(1, "Variables Mismatched");
-	}
-}
+    drive.tare();
+    intake_motorgroup.move(100);
+    drive.drive(12);
+    drive.turn(90);
+    intake_motorgroup.move(0);
+    drive.turn(90);
+    drive.drive(24);
+    drive.turn(90);
+    drive.drive(42.5);
+    intake_motorgroup.move(0);
+    drive.turn(180);
+    drive.drive(36);
+    intake_motorgroup.move(100);
+    drive.turn(180);
+    drive.drive(36);
+    intake_motorgroup.move(0);
+    drive.turn(180);
+    drive.drive(36);
 
 /**
  * Runs the operator control code. This function will be started in its own task
