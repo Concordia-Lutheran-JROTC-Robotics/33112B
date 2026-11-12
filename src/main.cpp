@@ -210,7 +210,7 @@ void digital_l2_function() {
 
 void digital_down_function() {
 	while (master.get_digital(DIGITAL_DOWN)) {
-		intake_mg.move(-100);
+		intake_mg.move(-25);
 		pros::delay(20);
 	}
 	intake_mg.move(0);
