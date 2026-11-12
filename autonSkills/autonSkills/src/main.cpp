@@ -7,6 +7,7 @@
 #include "pros/motors.hpp"
 #include "pros/rtos.hpp"
 #include "pros/screen.hpp"
+#include <cstdio>
 #include <string>
 
 #define DIGITAL_PISTON_PORT 'A'
@@ -65,6 +66,12 @@ public:
     void stop() {
         left.move_velocity(0);
         right.move_velocity(0);
+    }
+
+    // ── Calibrate the IMU (blocking, ~2 seconds) ──
+    // Must be called while the robot is stationary before using imu.get_rotation().
+    void calibrate() {
+        imu.reset(true);
     }
 
     // ── Reset sensors at start of auton ──
@@ -140,24 +147,10 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
+    drive.calibrate();   // Blocking IMU calibration (~2 s) — required before turn() uses imu.get_rotation()
     drive.tare();
-    intake_mg.move(100);
-    drive.drive(12);
-    drive.turn(90);
-    intake_mg.move(0);
-    drive.turn(90);
-    drive.drive(24);
-    drive.turn(90);
-    drive.drive(42.5);
-    intake_mg.move(0);
-    drive.turn(180);
-    drive.drive(36);
-    intake_mg.move(100);
-    drive.turn(180);
-    drive.drive(36);
-    intake_mg.move(0);
-    drive.turn(180);
-    drive.drive(36);
+    drive.drive(12, 100);
+    drive.turn(90, 100);
 }
 /**
  * Runs the operator control code. This function will be started in its own task
