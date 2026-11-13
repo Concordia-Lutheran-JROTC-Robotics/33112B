@@ -21,8 +21,8 @@ pros::MotorGroup lift_mg({16, -6});
 pros::MotorGroup intake_mg({-2, 12});
 
 class Drivetrain {
-    pros::MotorGroup left{1, 7, 10};
-    pros::MotorGroup right{-11, -17, -20};
+    pros::MotorGroup left{17, 14, 18};
+    pros::MotorGroup right{-4, -8, -10};
     pros::Imu imu{21};
 
     static constexpr double TICKS_PER_INCH = 40.1;  // ← CALIBRATE THIS
@@ -30,37 +30,71 @@ class Drivetrain {
 public:
     // ── Drive a distance in inches (negative = backward) ──
     void drive(double inches, int speed = 60) {
-        int ticks = -inches * TICKS_PER_INCH;
-        left.tare_position();
-        right.tare_position();
-        left.move_relative(ticks, speed);
-        right.move_relative(ticks, speed);
-        // Wait until both sides are near target
-        int timeout = 0;
-        while ((std::abs(left.get_position() - ticks) > 10 ||
-                std::abs(right.get_position() - ticks) > 10) && timeout < 1500) { // 15 seconds max
-            pros::delay(10);
-            timeout++;
-        }
-        stop();
-    }
+		int ticks = -inches * TICKS_PER_INCH;
 
-    // ── Turn by degrees (positive = right, negative = left) ──
-    void turn(double degrees, int speed = 150) {
-        double start = imu.get_rotation();  // unbounded, doesn't wrap
-        double target = start + degrees;
+		left.tare_position();
+		right.tare_position();
 
-        left.move_velocity(-speed);
-        right.move_velocity(speed);
+		left.move_relative(ticks, speed);
+		right.move_relative(ticks, speed);
 
-        int timeout = 0;
-        while (std::abs(imu.get_rotation() - target) > 1.0 && timeout < 1000) {
-            pros::delay(10);
-            timeout++;
-        }
+		int timeout = 0;
 
-        stop();
-    }
+		while (timeout < 1500) {
+			double leftPos = left.get_position();
+			double rightPos = right.get_position();
+
+			if (timeout % 50 == 0) {
+				pros::lcd::print(3, "Left: %.1f", leftPos);
+				pros::lcd::print(4, "Right: %.1f", rightPos);
+				pros::lcd::print(5, "Target: %d", ticks);
+			}
+
+			if (std::abs(leftPos - ticks) < 10 &&
+				std::abs(rightPos - ticks) < 10) {
+				break;
+			}
+
+			pros::delay(10);
+			timeout++;
+		}
+
+		pros::lcd::print(6, "Timeout: %d", timeout);
+		stop();
+	}
+
+    void turn(double degrees, int speed = 40) {
+		double start = imu.get_rotation();
+		double target = start + degrees;
+
+		int timeout = 0;
+
+		while (timeout < 500) {
+			double current = imu.get_rotation();
+			double error = target - current;
+
+			pros::lcd::print(3, "Current: %.1f", current);
+			pros::lcd::print(4, "Target: %.1f", target);
+			pros::lcd::print(5, "Error: %.1f", error);
+
+			// Stop slightly early to compensate for momentum
+			if (std::abs(error) < 4.0) {
+				break;
+			}
+
+			// Constant, slower turning speed
+			double output = error > 0 ? speed : -speed;
+
+			left.move_velocity(output);
+			right.move_velocity(-output);
+
+			pros::delay(10);
+			timeout++;
+		}
+
+		left.move(0);
+		right.move(0);
+	}
 
     // ── Stop ──
     void stop() {
@@ -147,10 +181,34 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
-    drive.calibrate();   // Blocking IMU calibration (~2 s) — required before turn() uses imu.get_rotation()
+    drive.calibrate();
     drive.tare();
-    drive.drive(12, 100);
-    drive.turn(90, 100);
+
+	lift_mg.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
+	intake_mg.move(75);
+	lift_mg.move(75);
+	pros::delay(200);
+	lift_mg.move(0);
+    drive.drive(14, 25);
+    drive.turn(-90, 25);
+	drive.drive(20, 25);
+	lift_mg.move(-75);
+	pros::delay(200);
+	lift_mg.move(0);
+	drive.drive(-1, 25);
+	intake_mg.move(-25);
+	pros::delay(100);
+	intake_mg.move(0);
+	drive.drive(-18, 50);
+	drive.turn(45, 25);
+	intake_mg.move(75);
+	drive.drive(30, 25);
+	lift_mg.move(50);
+	pros::delay(500);
+	lift_mg.move(0);
+
+
+    pros::lcd::set_text(1, "Auton Complete");
 }
 /**
  * Runs the operator control code. This function will be started in its own task
