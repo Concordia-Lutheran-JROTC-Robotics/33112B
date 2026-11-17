@@ -181,9 +181,9 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
-    void calibrate() {
-        imu.reset(true);
-    }
+    drive.calibrate();
+    drive.tare();
+
 	lift_mg.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
 	intake_mg.move(75);
 	lift_mg.move(75);
