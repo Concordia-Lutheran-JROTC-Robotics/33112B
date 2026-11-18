@@ -106,6 +106,7 @@ public:
     // Must be called while the robot is stationary before using imu.get_rotation().
     void calibrate() {
         imu.reset(true);
+        pros::delay(2500);
     }
 
     // ── Reset sensors at start of auton ──
