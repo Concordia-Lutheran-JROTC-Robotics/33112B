@@ -13,7 +13,6 @@
 
 static bool autonLeftSide = true;
 static bool autonRightSide = false;
-
 pros::MotorGroup left_mg({17, 14, 18});
 pros::MotorGroup right_mg({-4, -8, -10});
 pros::MotorGroup lift_mg({16, -6});
@@ -32,13 +31,15 @@ public:
         int ticks = -inches * TICKS_PER_INCH;
         left.tare_position();
         right.tare_position();
-        left.move_relative(ticks, speed);
+        left.move_relative(40.1, speed-20);
+        right.move_relative(40.1, speed-20);
+		left.move_relative(ticks, speed);
         right.move_relative(ticks, speed);
         // Wait until both sides are near target
         int timeout = 0;
         while ((std::abs(left.get_position() - ticks) > 10 ||
                 std::abs(right.get_position() - ticks) > 10) && timeout < 1500) { // 15 seconds max
-            pros::delay(10);
+					pros::delay(10);
             timeout++;
         }
         stop();
@@ -103,6 +104,7 @@ void initialize() {
 
 	pros::lcd::register_btn0_cb(on_left_button);
 	pros::lcd::register_btn2_cb(on_right_button);
+
 	
 }
 
@@ -143,20 +145,24 @@ void autonomous() {
 	autonLeftSide = true;
 	if (autonLeftSide) {
 		pros::lcd::set_text(1, "Left Side Autonomous");
-		drive.drive(12, 60);
-		pros::delay(1000);
-		left_mg.move(127);
-		right_mg.move(127);
-		pros::delay(2000);
-		left_mg.move(0);
-		right_mg.move(0);
-		drive.drive(12, 60);
-		pros::delay(500);
-		left_mg.move(127);
-		right_mg.move(127);
-		pros::delay(2000);
-		left_mg.move(0);
-		right_mg.move(0);
+		drive.tare();
+		intake_mg.move(100);
+		drive.drive(12);
+		drive.turn(90);
+		intake_mg.move(0);
+		drive.turn(90);
+		drive.drive(24);
+		drive.turn(90);
+		drive.drive(42.5);
+		intake_mg.move(0);
+		drive.turn(180);
+		drive.drive(36);
+		intake_mg.move(100);
+		drive.turn(180);
+		drive.drive(36);
+		intake_mg.move(0);
+		drive.turn(180);
+    drive.drive(36);
 		// Left side code here
 	} else if (autonRightSide) {
 		pros::lcd::set_text(1, "Right Side Autonomous");
@@ -210,7 +216,7 @@ void digital_l2_function() {
 
 void digital_down_function() {
 	while (master.get_digital(DIGITAL_DOWN)) {
-		intake_mg.move(-25);
+		intake_mg.move(-100);
 		pros::delay(20);
 	}
 	intake_mg.move(0);
