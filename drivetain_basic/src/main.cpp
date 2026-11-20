@@ -35,6 +35,8 @@ public:
         right.move_relative(40.1, speed-20);
 		left.move_relative(ticks, speed);
         right.move_relative(ticks, speed);
+		left.move_relative(40.1, speed-20);
+        right.move_relative(40.1, speed-20);
         // Wait until both sides are near target
         int timeout = 0;
         while ((std::abs(left.get_position() - ticks) > 10 ||
