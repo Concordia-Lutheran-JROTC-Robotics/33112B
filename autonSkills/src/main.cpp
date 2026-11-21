@@ -23,9 +23,9 @@ pros::MotorGroup intake_mg({-2, 12});
 class Drivetrain {
     pros::MotorGroup left{17, 14, 18};
     pros::MotorGroup right{-4, -8, -10};
-    pros::Imu imu{21};
 
-    static constexpr double TICKS_PER_INCH = 40.1;  // ← CALIBRATE THIS
+    static constexpr double TICKS_PER_INCH = 40.1;   // ← CALIBRATE THIS
+    static constexpr double TICKS_PER_DEGREE = 4.06; // ← 3.83 gave 85° for a 90° turn → 3.83 × (90/85) ≈ 4.06
 
 public:
     // ── Drive a distance in inches (negative = backward) ──
@@ -64,29 +64,29 @@ public:
 	}
 
     void turn(double degrees, int speed = 40) {
-		double start = imu.get_rotation();
-		double target = start + degrees;
+		left.tare_position();
+		right.tare_position();
+
+		int targetTicks = static_cast<int>(std::abs(degrees) * TICKS_PER_DEGREE);
+		int dir = degrees > 0 ? 1 : -1;  // +1 = right turn, -1 = left turn
 
 		int timeout = 0;
 
 		while (timeout < 500) {
-			double current = imu.get_rotation();
-			double error = target - current;
+			double leftPos = left.get_position();
+			double rightPos = right.get_position();
+			double avgPos = (std::abs(leftPos) + std::abs(rightPos)) / 2.0;
 
-			pros::lcd::print(3, "Current: %.1f", current);
-			pros::lcd::print(4, "Target: %.1f", target);
-			pros::lcd::print(5, "Error: %.1f", error);
+			pros::lcd::print(3, "Left: %.1f", leftPos);
+			pros::lcd::print(4, "Right: %.1f", rightPos);
+			pros::lcd::print(5, "Target: %d", targetTicks);
 
-			// Stop slightly early to compensate for momentum
-			if (std::abs(error) < 4.0) {
+			if (avgPos >= targetTicks) {
 				break;
 			}
 
-			// Constant, slower turning speed
-			double output = error > 0 ? speed : -speed;
-
-			left.move_velocity(output);
-			right.move_velocity(-output);
+			left.move_velocity(-dir * speed);
+			right.move_velocity(dir * speed);
 
 			pros::delay(10);
 			timeout++;
@@ -102,18 +102,10 @@ public:
         right.move_velocity(0);
     }
 
-    // ── Calibrate the IMU (blocking, ~2 seconds) ──
-    // Must be called while the robot is stationary before using imu.get_rotation().
-    void calibrate() {
-        imu.reset(true);
-        pros::delay(2500);
-    }
-
     // ── Reset sensors at start of auton ──
     void tare() {
         left.tare_position();
         right.tare_position();
-        imu.tare_rotation();
     }
 };
 
@@ -182,7 +174,6 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
-    drive.calibrate();
     drive.tare();
 
 	lift_mg.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
@@ -191,24 +182,34 @@ void autonomous() {
 	pros::delay(200);
 	lift_mg.move(0);
     drive.drive(14, 25);
-    drive.turn(-90, 25);
+    drive.turn(90, 25);
 	drive.drive(20, 25);
 	lift_mg.move(-75);
-	pros::delay(200);
+	pros::delay(150);
 	lift_mg.move(0);
 	drive.drive(-1, 25);
-	intake_mg.move(-25);
+	intake_mg.move(-50);
 	pros::delay(100);
 	intake_mg.move(0);
 	drive.drive(-18, 50);
-	drive.turn(45, 25);
-	intake_mg.move(75);
-	drive.drive(30, 25);
-	lift_mg.move(50);
-	pros::delay(500);
+	drive.turn(-47, 25);
+	lift_mg.move(25);
+	pros::delay(100);
 	lift_mg.move(0);
-
-
+	intake_mg.move(75);
+	drive.drive(36, 25);
+	lift_mg.move(50);
+	pros::delay(1500);
+	lift_mg.move(0);
+	drive.turn(135, 25);
+	drive.drive(18, 25);
+	lift_mg.move(-50);
+	pros::delay(1500);
+	lift_mg.move(0);
+	drive.drive(-1, 25);
+	intake_mg.move(-50);
+	pros::delay(100);
+	intake_mg.move(0);
     pros::lcd::set_text(1, "Auton Complete");
 }
 /**
