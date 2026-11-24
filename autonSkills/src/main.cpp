@@ -175,6 +175,7 @@ void competition_initialize() {
  */
 void autonomous() {
     drive.tare();
+	int liftMgPosition = lift_mg.get_position();
 
 	lift_mg.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
 	intake_mg.move(75);
@@ -185,31 +186,72 @@ void autonomous() {
     drive.turn(90, 25);
 	drive.drive(20, 25);
 	lift_mg.move(-75);
-	pros::delay(150);
+	while(lift_mg.get_position() > liftMgPosition) {
+		pros::delay(20);
+	}
 	lift_mg.move(0);
 	drive.drive(-1, 25);
 	intake_mg.move(-50);
 	pros::delay(100);
 	intake_mg.move(0);
-	drive.drive(-18, 50);
+	drive.drive(-15, 50);
 	drive.turn(-47, 25);
 	lift_mg.move(25);
-	pros::delay(100);
+	pros::delay(200);
 	lift_mg.move(0);
 	intake_mg.move(75);
-	drive.drive(36, 25);
+	drive.drive(30, 25);
+	drive.drive(4, 25);
 	lift_mg.move(50);
-	pros::delay(1500);
+	pros::delay(1250);
 	lift_mg.move(0);
+	drive.drive(-5, 25);
 	drive.turn(135, 25);
-	drive.drive(18, 25);
+	drive.drive(22, 25);
 	lift_mg.move(-50);
-	pros::delay(1500);
+	while(lift_mg.get_position() > liftMgPosition) {
+		pros::delay(20);
+	}
 	lift_mg.move(0);
-	drive.drive(-1, 25);
 	intake_mg.move(-50);
-	pros::delay(100);
+	drive.drive(-10, 25);
+	lift_mg.move(25);
+	pros::delay(200);
+	lift_mg.move(0);
 	intake_mg.move(0);
+	drive.turn(-65);
+	intake_mg.move(75);
+	drive.drive(23, 25);
+	drive.turn(125);
+	lift_mg.move(80);
+	pros::delay(2000);
+	lift_mg.move(0);
+	drive.drive(24, 25);
+	lift_mg.move(-50);
+	pros::delay(500);
+	lift_mg.move(0);
+	intake_mg.move(-50);
+	drive.drive(-4, 25);
+	intake_mg.move(0);
+	lift_mg.move(-90);
+	while(lift_mg.get_position() > liftMgPosition) {
+		pros::delay(20);
+	}
+	lift_mg.move(0);
+	drive.drive(-18, 25);
+	drive.turn(45);
+	drive.drive(22, 25);
+	drive.tare();
+	drive.turn(-45);
+	drive.drive(36, 25);
+	drive.turn(90);
+	drive.drive(-24, 25);
+	drive.drive(-6, 100);
+	drive.drive(4, 25);
+	drive.drive(-6, 100);
+	drive.drive(60, 50);
+	drive.stop();
+
     pros::lcd::set_text(1, "Auton Complete");
 }
 /**
@@ -274,6 +316,8 @@ void opcontrol() {
 	
 	// Record initial position so lift never goes back further than start
 	lift_mg.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
+
+	autonomous();
 
 	while (true) {
 		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
