@@ -216,20 +216,39 @@ void digital_l2_function() {
 	lift_mg.move(0);
 }
 
+bool intake_mg_active = false;
+
 void digital_down_function() {
-	while (master.get_digital(DIGITAL_DOWN)) {
-		intake_mg.move(-100);
-		pros::delay(20);
+	if (intake_mg_active) {
+		intake_mg.move(0);
+		intake_mg_active = false;
+	} else if (!intake_mg_active) {
+		intake_mg.move(-75);
+		intake_mg_active = true;
 	}
-	intake_mg.move(0);
 }
 
 void digital_right_function() {
-	while (master.get_digital(DIGITAL_RIGHT)) {
-		intake_mg.move(100);
+	if (intake_mg_active) {
+		intake_mg.move(0);
+		intake_mg_active = false;
+	} else if (!intake_mg_active) {
+		intake_mg.move(75);
+		intake_mg_active = true;
+	}
+}
+
+void digital_r1_function() {
+	lift_mg.move(-75);
+	while(lift_mg.get_position() > liftInitialPosition) {
 		pros::delay(20);
 	}
-	intake_mg.move(0);
+	lift_mg.move(0);
+	intake_mg.move(-50);
+	left_mg.move(-25);
+	right_mg.move(25);
+	pros::delay(750);
+	intake_mg.move(-0);
 }
 
 void opcontrol() {
@@ -286,6 +305,19 @@ void opcontrol() {
 			// }
 			// clawUD.move(0);
 			pros::Task digital_right_task(digital_right_function);
+		}
+
+		if (master.get_digital_new_press(DIGITAL_R1)) {
+			lift_mg.move(-75);
+			while(lift_mg.get_position() > liftInitialPosition) {
+				pros::delay(20);
+			}
+			lift_mg.move(0);
+			intake_mg.move(-25);
+			left_mg.move(50);
+			right_mg.move(50);
+			pros::delay(250);
+			intake_mg.move(-0);
 		}
 
 		pros::delay(20);

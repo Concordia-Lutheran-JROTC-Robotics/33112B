@@ -183,8 +183,8 @@ void autonomous() {
 	pros::delay(200);
 	lift_mg.move(0);
     drive.drive(14, 25);
-    drive.turn(90, 25);
-	drive.drive(20, 25);
+    drive.turn(88, 25);
+	drive.drive(23, 25);
 	lift_mg.move(-75);
 	while(lift_mg.get_position() > liftMgPosition) {
 		pros::delay(20);
@@ -194,6 +194,7 @@ void autonomous() {
 	intake_mg.move(-50);
 	pros::delay(100);
 	intake_mg.move(0);
+	// finish pin 2
 	drive.drive(-15, 50);
 	drive.turn(-47, 25);
 	lift_mg.move(25);
@@ -219,10 +220,10 @@ void autonomous() {
 	pros::delay(200);
 	lift_mg.move(0);
 	intake_mg.move(0);
-	drive.turn(-65);
+	drive.turn(-55);
 	intake_mg.move(75);
 	drive.drive(23, 25);
-	drive.turn(125);
+	drive.turn(120);
 	lift_mg.move(80);
 	pros::delay(2000);
 	lift_mg.move(0);
@@ -242,13 +243,15 @@ void autonomous() {
 	drive.turn(45);
 	drive.drive(22, 25);
 	drive.tare();
-	drive.turn(-45);
+	drive.turn(-45, 25);
 	drive.drive(36, 25);
-	drive.turn(90);
+	drive.turn(90, 25);
 	drive.drive(-24, 25);
-	drive.drive(-6, 100);
+	drive.drive(1, 50);
+	pros::delay(200);
+	drive.drive(-8, 120);
 	drive.drive(4, 25);
-	drive.drive(-6, 100);
+	drive.drive(-8, 100);
 	drive.drive(60, 50);
 	drive.stop();
 
