@@ -320,8 +320,6 @@ void opcontrol() {
 	// Record initial position so lift never goes back further than start
 	lift_mg.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
 
-	autonomous();
-
 	while (true) {
 		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
 		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
