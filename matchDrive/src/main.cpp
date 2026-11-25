@@ -146,25 +146,6 @@ void competition_initialize() {
 void autonomous() {
 	autonLeftSide = true;
 	if (autonLeftSide) {
-		pros::lcd::set_text(1, "Left Side Autonomous");
-		drive.tare();
-		intake_mg.move(100);
-		drive.drive(12);
-		drive.turn(90);
-		intake_mg.move(0);
-		drive.turn(90);
-		drive.drive(24);
-		drive.turn(90);
-		drive.drive(42.5);
-		intake_mg.move(0);
-		drive.turn(180);
-		drive.drive(36);
-		intake_mg.move(100);
-		drive.turn(180);
-		drive.drive(36);
-		intake_mg.move(0);
-		drive.turn(180);
-    drive.drive(36);
 		// Left side code here
 	} else if (autonRightSide) {
 		pros::lcd::set_text(1, "Right Side Autonomous");
